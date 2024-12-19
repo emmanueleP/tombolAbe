@@ -1,0 +1,65 @@
+QPushButton {
+    font-weight: bold;
+    border: 2px solid #ccc;
+    background-color: white;
+    border-radius: 10px;
+}
+
+QPushButton:hover {
+    background-color: #f0f0f0;
+    border-color: #666;
+}
+
+QPushButton[estratto="true"] {
+    background-color: #db5e35;
+    color: white;
+    border-color: #a94826;
+}
+
+QLabel {
+    font-size: 16px;
+}
+
+#estrai_button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+#estrai_button:hover {
+    background-color: #45a049;
+}
+
+#reset_button {
+    background-color: #f44336;
+}
+
+#reset_button:hover {
+    background-color: #da190b;
+}
+
+#grid_container {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 10px;
+    border: 1px solid #dee2e6;
+}
+
+.QMainWindow {
+    background-color: white;
+}
+
+QToolBar {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 8px;
+    min-height: 40px;
+}
