@@ -12,7 +12,7 @@ class InfoDialog(QDialog):
         info_text = QLabel("""
             <h2>Tombola del Dono</h2>
             <p>Versione 1.0</p>
-            <p>© 2024 - Emmanuele Pani. Under MIT License</p>
+            <p>© 2024 - Emmanuele Pani. Under MIT License.</p>
             <p>Un'applicazione per giocare a tombola in modo solidale e divertente durante le feste natalizie.</p>
             <p>Written with Python and PyQt5.</p>
         """)
