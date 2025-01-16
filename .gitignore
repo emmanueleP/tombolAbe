@@ -1,0 +1,21 @@
+#Python
+*.pyc
+*.pyo
+*.pyd
+*__pycache__/
+dialogs/__pycache__/
+
+# Visual Studio Code
+.vscode
+
+# Installer and build
+/build
+/dist
+/installer
+
+# Other
+.DS_Store
+.env
+.env.*
+.venv
+
