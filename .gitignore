@@ -12,6 +12,7 @@ dialogs/__pycache__/
 /build
 /dist
 /installer
+*.spec
 
 # Other
 .DS_Store
@@ -19,3 +20,5 @@ dialogs/__pycache__/
 .env.*
 .venv
 
+# Inno Setup
+*.iss

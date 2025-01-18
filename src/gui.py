@@ -1,17 +1,20 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, QMessageBox, QGridLayout,
-    QMenuBar, QAction, QFileDialog, QToolBar, QDialog, QSpinBox, QDialogButtonBox, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
+    QMenuBar, QAction, QFileDialog, QToolBar, QDialog, QHBoxLayout,
     QDesktopWidget, QScrollArea
 )
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QFont, QKeySequence, QColor
-from logic import Tombola, genera_cartelle_pdf, genera_foglio
-from animations import anima_numero
+from .core.logic import Tombola
+from .dialogs.info_dialog import InfoDialog
+from .dialogs.regole_dialog import RegoleDialog
+from .dialogs.genera_cartelle_dialog import GeneraCartelleDialog
+from .dialogs.cronologia_dialog import CronologiaDialog
+from .database import TombolaDB
+from .animations import anima_numero
+from .core.cartelle_pdf_manager import CartellePDFManager
 import os
 from datetime import datetime
-from database import TombolaDB
-from dialogs.info_dialog import InfoDialog
-from dialogs.regole_dialog import RegoleDialog
 
 class TombolaApp(QMainWindow):
     def __init__(self):
@@ -346,8 +349,8 @@ class TombolaApp(QMainWindow):
         )
         if save_path:
             try:
-                logo_path = self.dialog.get_logo_path()  # Ora possiamo accedere al dialogo
-                genera_cartelle_pdf(
+                logo_path = self.dialog.get_logo_path()
+                CartellePDFManager.genera_pdf(
                     save_path, 
                     cartelle_per_foglio * num_fogli,
                     logo_path
@@ -388,155 +391,3 @@ class TombolaApp(QMainWindow):
     def mostra_regole(self):
         regole_dialog = RegoleDialog(self)
         regole_dialog.exec_()
-
-class GeneraCartelleDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Genera Cartelle")
-        self.logo_path = None  # Per memorizzare il percorso del logo
-        
-        layout = QVBoxLayout()
-        layout.setSpacing(10)
-        layout.setContentsMargins(20, 20, 20, 20)
-
-        # Selezione logo
-        logo_layout = QHBoxLayout()
-        self.logo_label = QLabel("Nessun logo selezionato")
-        self.logo_button = QPushButton("Seleziona Logo")
-        self.logo_button.clicked.connect(self.seleziona_logo)
-        logo_layout.addWidget(self.logo_label)
-        logo_layout.addWidget(self.logo_button)
-        layout.addLayout(logo_layout)
-
-        # Numero di cartelle per foglio
-        self.spin_cartelle = QSpinBox()
-        self.spin_cartelle.setRange(1, 6)
-        self.spin_cartelle.setValue(1)
-        layout.addWidget(QLabel("Cartelle per foglio:"))
-        layout.addWidget(self.spin_cartelle)
-
-        # Numero totale di fogli
-        self.spin_fogli = QSpinBox()
-        self.spin_fogli.setRange(1, 100)
-        self.spin_fogli.setValue(1)
-        layout.addWidget(QLabel("Numero di fogli:"))
-        layout.addWidget(self.spin_fogli)
-
-        # Pulsanti
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        )
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        buttons.setStyleSheet("""
-            QPushButton {
-                padding: 8px 16px;
-                font-size: 14px;
-                border-radius: 5px;
-            }
-            QPushButton[text="OK"] {
-                background-color: #4CAF50;
-                color: white;
-            }
-            QPushButton[text="Cancel"] {
-                background-color: #f44336;
-                color: white;
-            }
-        """)
-        layout.addWidget(buttons)
-
-        self.setLayout(layout)
-
-    def seleziona_logo(self):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Seleziona Logo",
-            "",
-            "Immagini (*.png *.jpg *.jpeg)"
-        )
-        if file_path:
-            self.logo_path = file_path
-            self.logo_label.setText(os.path.basename(file_path))
-
-    def get_logo_path(self):
-        return self.logo_path
-
-class CronologiaDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Cronologia Partite")
-        self.setMinimumSize(1000, 600)
-        
-        layout = QVBoxLayout()
-        
-        # Lista partite
-        self.lista_partite = QTreeWidget()
-        self.lista_partite.setHeaderLabels([
-            "Data/Ora",
-            "Stato",
-            "Numeri Estratti",
-            "Statistiche",
-            "Primo/Ultimo"
-        ])
-        self.lista_partite.setAlternatingRowColors(True)
-        
-        # Imposta le larghezze delle colonne
-        self.lista_partite.setColumnWidth(0, 150)  # Data/Ora
-        self.lista_partite.setColumnWidth(1, 100)  # Stato
-        self.lista_partite.setColumnWidth(2, 400)  # Numeri
-        self.lista_partite.setColumnWidth(3, 200)  # Statistiche
-        self.lista_partite.setColumnWidth(4, 100)  # Primo/Ultimo
-        
-        layout.addWidget(self.lista_partite)
-        
-        # Legenda
-        legenda = QLabel(
-            "Legenda: E = Estrazione automatica, M = Selezione manuale, "
-            "D = Deselezione, A = Annullamento, R = Reset"
-        )
-        legenda.setStyleSheet("color: gray; font-style: italic;")
-        layout.addWidget(legenda)
-        
-        self.setLayout(layout)
-        self.carica_cronologia()
-    
-    def carica_cronologia(self):
-        cronologia = self.parent().db.get_cronologia()
-        for partita in cronologia:
-            item = QTreeWidgetItem()
-            
-            # Data e ora
-            data_ora = datetime.strptime(partita[1], "%Y-%m-%d %H:%M:%S")
-            item.setText(0, data_ora.strftime("%d/%m/%Y %H:%M"))
-            
-            # Stato
-            stato = partita[2]
-            item.setText(1, stato.replace('_', ' ').title())
-            
-            # Eventi
-            eventi = partita[3] if partita[3] else ""
-            item.setText(2, eventi)
-            
-            # Statistiche
-            stats = (
-                f"Estrazioni: {partita[4]}, "
-                f"Manuali: {partita[5]}, "
-                f"Deselezioni: {partita[6]}, "
-                f"Annullamenti: {partita[7]}"
-            )
-            item.setText(3, stats)
-            
-            # Primo/Ultimo numero
-            primo = partita[8] if partita[8] is not None else "-"
-            ultimo = partita[9] if partita[9] is not None else "-"
-            item.setText(4, f"{primo} → {ultimo}")
-            
-            # Colore in base allo stato
-            if stato == 'in_corso':
-                item.setBackground(1, QColor('#fff3cd'))
-            elif stato == 'completata':
-                item.setBackground(1, QColor('#d4edda'))
-            elif stato == 'annullata':
-                item.setBackground(1, QColor('#f8d7da'))
-            
-            self.lista_partite.addTopLevelItem(item)
